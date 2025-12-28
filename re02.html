@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24届10班随机抽奖大转盘</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #ff9a9e, #fad0c4, #fad0c4, #a1c4fd);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #b0b0d0;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+        }
+        
+        .wheel-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            margin-bottom: 40px;
+        }
+        
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            transition: transform 5s cubic-bezier(0.17, 0.67, 0.21, 0.99);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+            border: 8px solid #2d3047;
+        }
+        
+        .wheel-item {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: 100% 100%;
+            left: 0;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            clip-path: polygon(0 0, 100% 0, 100% 100%);
+        }
+        
+        .wheel-text {
+            position: absolute;
+            left: 50px;
+            top: 50%;
+            transform: translateY(-50%) rotate(90deg);
+            transform-origin: 0 0;
+            font-weight: 600;
+            font-size: 11px;
+            color: #111;
+            white-space: nowrap;
+            text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
+        }
+        
+        .pointer {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 70px;
+            z-index: 10;
+        }
+        
+        .pointer::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 70px solid #ff4757;
+            filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.5));
+        }
+        
+        .pointer::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #2d3047;
+            border-radius: 50%;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        .spin-button {
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(255, 65, 108, 0.4);
+            margin-bottom: 30px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        .spin-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(255, 65, 108, 0.6);
+        }
+        
+        .spin-button:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
+        }
+        
+        .spin-button:disabled {
+            background: linear-gradient(to right, #777, #999);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .result-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 20px;
+        }
+        
+        .result-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #fad0c4;
+        }
+        
+        #result {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #ffd166;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s ease;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .history {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .history-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #a1c4fd;
+        }
+        
+        #history-list {
+            list-style-type: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        #history-list li {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .name-list-container {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        .name-list-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #a1c4fd;
+        }
+        
+        .name-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .name-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            width: 120px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .name-item.highlight {
+            background: rgba(255, 209, 102, 0.3);
+            border: 2px solid #ffd166;
+            transform: scale(1.05);
+        }
+        
+        .instructions {
+            margin-top: 30px;
+            font-size: 1rem;
+            color: #b0b0d0;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #888;
+            font-size: 0.9rem;
+        }
+@media (max-width: 600px) {
+            .wheel-container {
+                width: 300px;
+                height: 300px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .wheel-text {
+                font-size: 9px;
+                left: 35px;
+            }
+            
+            .spin-button {
+                padding: 15px 35px;
+                font-size: 1.3rem;
+            }
+            
+            #result {
+                font-size: 2rem;
+            }
+            
+            .name-item {
+                width: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-dharmachakra"></i> 24届10班随机抽奖大转盘</h1>
+        <p class="subtitle">点击旋转按钮，从47人中随机抽取一名幸运者</p>
+    </div>
+    
+    <div class="container">
+        <div class="wheel-container">
+            <div class="wheel" id="wheel">
+                <!-- 转盘分区将通过JS动态生成 -->
+            </div>
+            <div class="pointer"></div>
+        </div>
+        
+        <div class="controls">
+            <button class="spin-button" id="spin-button">
+                <i class="fas fa-redo-alt"></i> 开始旋转
+            </button>
+            
+            <div class="result-container">
+                <div class="result-title">抽奖结果：</div>
+                <div id="result">等待抽奖...</div>
+            </div>
+            
+            <div class="history">
+                <div class="history-title">抽奖历史记录：</div>
+                <ul id="history-list">
+                    <!-- 历史记录将通过JS动态生成 -->
+                </ul>
+            </div>
+        </div>
+        
+        <div class="name-list-container">
+            <div class="name-list-title">24届10班全体同学名单：</div>
+            <div class="name-list" id="name-list">
+                <!-- 参与者名单将通过JS动态生成 -->
+            </div>
+        </div>
+    </div>
+    <div class="instructions">
+        <p><i class="fas fa-info-circle"></i> 使用说明：点击"开始旋转"按钮，转盘将开始旋转并随机选择一位同学。每次抽取结果将记录在历史记录中。</p>
+    </div>
+    
+    <div class="footer">
+        <p>24届10班大转盘抽奖系统 &copy; 2025 | 共47位同学</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 24届10班同学名单
+            const names = [
+                '陈子赫', '万佳睿', '贾宸懿', '赵子睿', '刘士睿', '张莹', '李奕霏', '吴妙涵',
+                '吴双双', '周子琪', '闫诗雅', '夏冬雨', '杜一鸣', '代汶君', '杨俯瑞', '闫梓煜',
+                '管浩宇', '王子涵', '王心怡', '姚博涵', '马盛博', '李佳兴', '徐嘉琪', '甘润霖',
+                '寇梦茹', '王佳臻', '刘筱雅', '闫跃天', '万宇轩', '狄景涵', '蒋靖涵', '田若一',
+                '王晗玥', '丁鹤翔', '王晗韵', '景泓诚', '张文秀', '韩嘉庆', '刘子嘉', '马启睿',
+                '梁爱馨', '张梓皓', '郑远馨', '姚老师', '孙浩宇', '黄楚妍', '李兆杰'
+            ];
+            
+            // 获取DOM元素 
+            const wheel = document.getElementById('wheel');
+            const spinButton = document.getElementById('spin-button');
+            const resultElement = document.getElementById('result');
+            const historyList = document.getElementById('history-list');
+            const nameListElement = document.getElementById('name-list');
+            
+            // 转盘状态变量
+            let isSpinning = false;
+            let currentRotation = 0;
+            let spinHistory = [];
+            
+            // 初始化转盘和参与者名单
+            initWheel();
+            initNameList();
+            
+            // 初始化转盘分区 - 修复角度问题
+            function initWheel() {
+                wheel.innerHTML = '';
+                const totalItems = names.length;
+                // 精确计算每个扇形的角度
+                const anglePerItem = 360 / totalItems;
+                
+                console.log(`总扇形数: ${totalItems}, 每个扇形角度: ${anglePerItem}度`);
+            // 创建转盘分区
+                for (let i = 0; i < totalItems; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'wheel-item';
+                    item.dataset.index = i;
+                    
+                    // 计算旋转角度 - 确保精确
+                    const rotateAngle = i * anglePerItem;
+                    
+                    // 设置扇形样式
+                    item.style.transform = `rotate(${rotateAngle}deg)`;
+                    
+                    // 设置分区颜色（使用渐变色彩）
+                    const hue = (i * 137.508) % 360; // 使用黄金角分布颜色
+                    item.style.backgroundColor = i % 2 === 0 ? `hsl(${hue}, 70%, 65%)` : `hsl(${hue}, 70%, 55%)`;
+                    
+                    // 添加名字文本
+                    const text = document.createElement('div');
+                    text.className = 'wheel-text';
+                    text.textContent = names[i];
+                    // 文字旋转角度为扇形角度的一半，使其位于扇形中央
+                    text.style.transform = `translateY(-50%) rotate(${anglePerItem/2}deg)`;
+                    
+                    item.appendChild(text);
+                    wheel.appendChild(item);
+                    
+                    // 控制台输出每个扇形的角度信息
+                    if (i < 5 || i >= totalItems - 5) {
+                        console.log(`扇形${i}: ${names[i]}, 角度: ${rotateAngle.toFixed(2)}度`);
+                    }
+                }
+                
+                // 验证最后一个扇形的角度
+                console.log(`最后一个扇形角度: ${((totalItems - 1) * anglePerItem).toFixed(2)}度`);
+                console.log(`理论总角度: ${((totalItems - 1) * anglePerItem + anglePerItem).toFixed(2)}度 (应为360度)`);
+            }
+            
+            // 初始化参与者名单
+            function initNameList() {
+                nameListElement.innerHTML = '';
+                
+                names.forEach((name, index) => {
+                    const nameItem = document.createElement('div');
+                    nameItem.className = 'name-item';
+                    nameItem.textContent = name;
+                    nameItem.dataset.index = index;
+                    nameListElement.appendChild(nameItem);
+                });
+            }
+            
+            // 高亮显示选中的参与者
+            function highlightSelectedName(index) {
+                // 移除所有高亮
+                document.querySelectorAll('.name-item').forEach(item => {
+                    item.classList.remove('highlight');
+                });
+                
+                // 高亮选中的参与者
+                const selectedItem = document.querySelector(`.name-item[data-index="${index}"]`);
+                if (selectedItem) {
+                    selectedItem.classList.add('highlight');
+                    
+                    // 滚动到可见区域
+                    selectedItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+            
+            // 旋转转盘
+            function spinWheel() {
+                if (isSpinning) return;
+                
+                isSpinning = true;
+                spinButton.disabled = true;
+                resultElement.textContent = "旋转中...";
+                resultElement.style.color = "#ff9a9e";
+                
+                // 随机选择一位（0-46）
+                const selectedIndex = Math.floor(Math.random() * names.length);
+                const selectedName = names[selectedIndex];
+                
+                // 计算需要旋转的角度
+                const anglePerItem = 360 / names.length;
+                // 确保旋转多圈后停在选中项目的中间
+                const targetRotation = currentRotation + 360 * 5 + (360 - (selectedIndex * anglePerItem) - anglePerItem/2);
+                
+                // 应用旋转动画
+                wheel.style.transform = `rotate(${targetRotation}deg)`;
+                currentRotation = targetRotation % 360;
+                
+                // 在旋转结束后显示结果
+                setTimeout(() => {
+                    resultElement.textContent = selectedName;
+                    resultElement.style.color = "#ffd166";
+                    resultElement.style.transform = "scale(1.1)";
+                    setTimeout(() => {
+                        resultElement.style.transform = "scale(1)";
+                    }, 300);
+                    
+                    // 高亮显示选中的参与者
+                    highlightSelectedName(selectedIndex);
+                    
+                    // 添加到历史记录
+                    addToHistory(selectedName, selectedIndex);
+                    
+                    // 重置按钮状态
+                    setTimeout(() => {
+                        isSpinning = false;
+                        spinButton.disabled = false;
+                    }, 500);
+                }, 5000); // 与CSS中的transition持续时间匹配
+            }
+            
+            // 添加到历史记录
+            function addToHistory(name, index) {
+                const timestamp = new Date().toLocaleTimeString();
+                const historyItem = {
+                    name: name,
+                    index: index,
+                    time: timestamp
+                };
+                
+                spinHistory.unshift(historyItem);
+                if (spinHistory.length > 10) {
+                    spinHistory = spinHistory.slice(0, 10);
+                }
+                
+                updateHistoryList();
+            }
+            
+            // 更新历史记录显示
+            function updateHistoryList() {
+                historyList.innerHTML = '';
+                
+                spinHistory.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = `${item.name} (${item.time})`;
+                    historyList.appendChild(li);
+                });
+            }
+            
+            // 绑定按钮点击事件
+            spinButton.addEventListener('click', spinWheel);
+            
+            // 添加键盘支持
+            document.addEventListener('keydown', function(event) {
+                if (event.code === 'Space' && !isSpinning) {
+                    event.preventDefault();
+                    spinWheel();
+                }
+            });
+            
+            // 初始化历史记录显示
+            updateHistoryList();
+        });
+    </script>
+</body>
+</html>
