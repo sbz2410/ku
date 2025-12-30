@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>舞蹈抽卡</title>
+    <style>
+        body {
+            background-color: #000;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+        
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 40px;
+            max-width: 1200px;
+        }
+        
+        .card {
+            width: 180px;
+            height: 250px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 12px;
+        }
+        
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+        
+        .card-back {
+            background-color: #FFD700;
+            color: #000;
+            font-weight: bold;
+            font-size: 1.8rem;
+            border: 3px solid #FFED4E;
+        }
+        
+        .card-front {
+            background-color: #FFED4E;
+            color: #000;
+            transform: rotateY(180deg);
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 3px solid #FFD700;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        button {
+            background-color: #FFD700;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #FFED4E;
+        }
+        
+        .timer {
+            color: #FFD700;
+            font-size: 1.2rem;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 1000px) {
+            .card {
+                width: 150px;
+                height: 210px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .cards-container {
+                gap: 15px;
+            }
+            
+            .card {
+                width: 130px;
+                height: 180px;
+            }
+            
+            .card-back {
+                font-size: 1.5rem;
+            }
+            
+            .card-front {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cards-container" id="cards-container"></div>
+    <div class="timer">自动翻回倒计时: <span id="countdown">10</span>秒</div>
+    <div class="controls">
+        <button id="flip-all">翻开全部</button>
+        <button id="reset">立即复位</button>
+    </div>
+
+    <script>
+        const cardData = [
+            { id: 1, backText: "舞蹈", frontText: "大香蕉" },
+            { id: 2, backText: "舞蹈", frontText: "库里之歌" },
+            { id: 3, backText: "舞蹈", frontText: "青海瑶" },
+            { id: 4, backText: "舞蹈", frontText: "科目三" },
+            { id: 5, backText: "舞蹈", frontText: "曼巴OUT" }
+        ];
+
+        let cards = [];
+        let timer = null;
+        let countdown = 10;
+
+        function initCards() {
+            const container = document.getElementById('cards-container');
+            container.innerHTML = '';
+            cards = [];
+            
+            cardData.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card';
+                cardElement.dataset.id = card.id;
+                
+                cardElement.innerHTML = `
+                    <div class="card-face card-back">
+                        <div>${card.backText}</div>
+                    </div>
+                    <div class="card-face card-front">
+                        <div>${card.frontText}</div>
+                    </div>
+                `;
+                
+                cardElement.addEventListener('click', () => flipCard(cardElement));
+                container.appendChild(cardElement);
+                cards.push(cardElement);
+            });
+            
+            shuffleCards();
+        }
+
+        function flipCard(card) {
+            if (card.classList.contains('flipped')) return;
+            
+            card.classList.add('flipped');
+            startTimer();
+        }
+
+        function startTimer() {
+            if (timer) {
+                clearInterval(timer);
+                countdown = 10;
+                document.getElementById('countdown').textContent = countdown;
+            }
+            
+            timer = setInterval(() => {
+                countdown--;
+                document.getElementById('countdown').textContent = countdown;
+                
+                if (countdown <= 0) {
+                    resetCards();
+                    countdown = 10;
+                    document.getElementById('countdown').textContent = countdown;
+                    clearInterval(timer);
+                    timer = null;
+                }
+            }, 1000);
+        }
+
+        function resetCards() {
+            cards.forEach(card => {
+                card.classList.remove('flipped');
+            });
+            
+            shuffleCards();
+        }
+
+        function shuffleCards() {
+            const container = document.getElementById('cards-container');
+            const cardElements = Array.from(container.children);
+            
+            for (let i = cardElements.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                container.appendChild(cardElements[j]);
+            }
+            
+            cards = Array.from(container.querySelectorAll('.card'));
+        }
+
+        function flipAllCards() {
+            cards.forEach(card => {
+                if (!card.classList.contains('flipped')) {
+                    card.classList.add('flipped');
+                }
+            });
+            
+            startTimer();
+        }
+
+        document.getElementById('flip-all').addEventListener('click', flipAllCards);
+        document.getElementById('reset').addEventListener('click', () => {
+            resetCards();
+            countdown = 10;
+            document.getElementById('countdown').textContent = countdown;
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+        });
+
+        window.addEventListener('load', () => {
+            initCards();
+        });
+
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('shuffleOnLoad', 'true');
+        });
+
+        if (localStorage.getItem('shuffleOnLoad') === 'true') {
+            localStorage.removeItem('shuffleOnLoad');
+        }
+    </script>
+</body>
+</html>
